@@ -240,6 +240,9 @@ def test_ast_good_lambda():
 def test_ast_bad_lambda():
     "Make sure AST can't compile invalid lambda"
     cant_compile("(fn)")
+    cant_compile("(fn ())")
+    cant_compile("(fn () 1)")
+    cant_compile("(fn (x) 1)")
 
 
 def test_ast_good_yield():
@@ -380,11 +383,11 @@ def test_ast_expression_basics():
 
 def test_ast_anon_fns_basics():
     """ Ensure anon fns work. """
-    code = can_compile("(fn (x) (* x x))").body[0].value
+    code = can_compile("(fn [x] (* x x))").body[0].value
     assert type(code) == ast.Lambda
-    code = can_compile("(fn (x) (print \"multiform\") (* x x))").body[0]
+    code = can_compile("(fn [x] (print \"multiform\") (* x x))").body[0]
     assert type(code) == ast.FunctionDef
-    can_compile("(fn (x))")
+    can_compile("(fn [x])")
     cant_compile("(fn)")
 
 
@@ -421,23 +424,23 @@ def test_argument_destructuring():
 
 def test_lambda_list_keywords_rest():
     """ Ensure we can compile functions with lambda list keywords."""
-    can_compile("(fn (x &rest xs) (print xs))")
-    cant_compile("(fn (x &rest xs &rest ys) (print xs))")
-    can_compile("(fn (&optional a &rest xs) (print xs))")
+    can_compile("(fn [x &rest xs] (print xs))")
+    cant_compile("(fn [x &rest xs &rest ys] (print xs))")
+    can_compile("(fn [&optional a &rest xs] (print xs))")
 
 
 def test_lambda_list_keywords_key():
     """ Ensure we can compile functions with &key."""
-    can_compile("(fn (x &key {foo True}) (list x foo))")
-    cant_compile("(fn (x &key {bar \"baz\"} &key {foo 42}) (list x bar foo))")
-    cant_compile("(fn (x &key {1 2 3 4}) (list x))")
+    can_compile("(fn [x &key {foo True}] (list x foo))")
+    cant_compile("(fn [x &key {bar \"baz\"} &key {foo 42}] (list x bar foo))")
+    cant_compile("(fn [x &key {1 2 3 4}] (list x))")
 
 
 def test_lambda_list_keywords_kwargs():
     """ Ensure we can compile functions with &kwargs."""
-    can_compile("(fn (x &kwargs kw) (list x kw))")
-    cant_compile("(fn (x &kwargs xs &kwargs ys) (list x xs ys))")
-    can_compile("(fn (&optional x &kwargs kw) (list x kw))")
+    can_compile("(fn [x &kwargs kw] (list x kw))")
+    cant_compile("(fn [x &kwargs xs &kwargs ys] (list x xs ys))")
+    can_compile("(fn [&optional x &kwargs kw] (list x kw))")
 
 
 def test_lambda_list_keywords_kwonly():
@@ -460,8 +463,8 @@ def test_lambda_list_keywords_kwonly():
 
 def test_lambda_list_keywords_mixed():
     """ Ensure we can mix them up."""
-    can_compile("(fn (x &rest xs &kwargs kw) (list x xs kw))")
-    cant_compile("(fn (x &rest xs &fasfkey {bar \"baz\"}))")
+    can_compile("(fn [x &rest xs &kwargs kw] (list x xs kw))")
+    cant_compile("(fn [x &rest xs &fasfkey {bar \"baz\"}])")
     if PY3:
         can_compile("(fn [x &rest xs &kwargs kwxs &kwonly kwoxs]"
                     "  (list x xs kwxs kwoxs))")
