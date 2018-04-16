@@ -16,6 +16,8 @@ def sym(wanted):
     return skip(some(lambda x: isinstance(x, HySymbol) and x == wanted))
 
 def whole(parsers):
+    if len(parsers) == 0:
+        return finished >> (lambda x: [])
     if len(parsers) == 1:
         return parsers[0] + finished >> (lambda x: x[:-1])
     return reduce(add, parsers) + skip(finished)
