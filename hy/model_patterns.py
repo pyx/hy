@@ -24,7 +24,7 @@ def whole(parsers):
 
 def _grouped(group_type, parsers): return (
     some(lambda x: isinstance(x, group_type)) >>
-    (lambda x: group_type(whole(parsers).parse(x)).replace(x)))
+    (lambda x: group_type(whole(parsers).parse(x)).replace(x, recursive=False)))
 
 def sb(*parsers):
     return _grouped(HyList, parsers)
