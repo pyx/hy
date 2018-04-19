@@ -2,13 +2,14 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.models import HyExpression, HySymbol, HyKeyword, HyList
+from hy.models import HyExpression, HySymbol, HyKeyword, HyString, HyList
 from funcparserlib.parser import some, skip, many, finished, a
 from functools import reduce
 from operator import add
 
 EXPR = some(lambda _: True)
 SYM = some(lambda x: isinstance(x, HySymbol))
+STR = some(lambda x: isinstance(x, HyString))
 
 def sym(wanted):
     if wanted.startswith(":"):
