@@ -922,15 +922,9 @@ class HyASTCompiler(object):
 
         return ret
 
-    @builds("break")
-    @checkargs(0)
-    def compile_break_expression(self, expr):
-        return asty.Break(expr)
-
-    @builds("continue")
-    @checkargs(0)
-    def compile_continue_expression(self, expr):
-        return asty.Continue(expr)
+    @special(["break", "continue"], [])
+    def compile_break_or_continue_expression(self, expr, root):
+        return (asty.Break if root == "break" else asty.Continue)(expr)
 
     @builds("assert")
     @checkargs(min=1, max=2)
