@@ -939,20 +939,17 @@ class HyASTCompiler(object):
         node = asty.Global if root == "global" else asty.Nonlocal
         return node(expr, names=list(map(ast_str, syms)))
 
-    @builds("yield")
-    @checkargs(max=1)
-    def compile_yield_expression(self, expr):
+    @special("yield", [maybe(EXPR)])
+    def compile_yield_expression(self, expr, root, arg):
         ret = Result(contains_yield=(not PY3))
-        if len(expr) > 1:
-            ret += self.compile(expr[1])
+        if arg is not None:
+            ret += self.compile(arg)
         return ret + asty.Yield(expr, value=ret.force_expr)
 
-    @builds("yield-from", iff=PY3)
-    @builds("await", iff=PY35)
-    @checkargs(1)
-    def compile_yield_from_or_await_expression(self, expr):
-        ret = Result() + self.compile(expr[1])
-        node = asty.YieldFrom if expr[0] == "yield-from" else asty.Await
+    @special([(PY3, "yield-from"), (PY35, "await")], [EXPR])
+    def compile_yield_from_or_await_expression(self, expr, root, arg):
+        ret = Result() + self.compile(arg)
+        node = asty.YieldFrom if root == "yield-from" else asty.Await
         return ret + node(expr, value=ret.force_expr)
 
     @special("get", [EXPR, oneplus(EXPR)])
