@@ -926,15 +926,12 @@ class HyASTCompiler(object):
     def compile_break_or_continue_expression(self, expr, root):
         return (asty.Break if root == "break" else asty.Continue)(expr)
 
-    @builds("assert")
-    @checkargs(min=1, max=2)
-    def compile_assert_expression(self, expr):
-        expr.pop(0)  # assert
-        ret = self.compile(expr.pop(0))
+    @special("assert", [EXPR, maybe(EXPR)])
+    def compile_assert_expression(self, expr, root, test, msg):
+        ret = self.compile(test)
         e = ret.force_expr
-        msg = None
-        if expr:
-            msg = self.compile(expr.pop(0)).force_expr
+        if msg is not None:
+            msg = self.compile(msg).force_expr
         return ret + asty.Assert(expr, test=e, msg=msg)
 
     @special(["global", (PY3, "nonlocal")], [oneplus(SYM)])
