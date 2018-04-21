@@ -1066,9 +1066,9 @@ class HyASTCompiler(object):
 
         return ret
 
-    @builds(",")
-    def compile_tuple(self, expr):
-        elts, ret, _ = self._compile_collect(expr[1:])
+    @special(",", [many(EXPR)])
+    def compile_tuple(self, expr, root, args):
+        elts, ret, _ = self._compile_collect(args)
         return ret + asty.Tuple(expr, elts=elts, ctx=ast.Load())
 
     def _compile_generator_iterables(self, trailers):
