@@ -1703,20 +1703,12 @@ class HyASTCompiler(object):
             new_args.extend([k, v])
         return HyExpression([HySymbol("setv")] + new_args).replace(expr)
 
-    @builds("dispatch-tag-macro")
-    @checkargs(exact=2)
-    def compile_dispatch_tag_macro(self, expression):
-        expression.pop(0)  # dispatch-tag-macro
-        tag = expression.pop(0)
-        if not type(tag) == HyString:
-            raise HyTypeError(
-                tag,
-                "Trying to expand a tag macro using `{0}' instead "
-                "of string".format(type(tag).__name__),
-            )
-        tag = HyString(mangle(tag)).replace(tag)
-        expr = tag_macroexpand(tag, expression.pop(0), self)
-        return self.compile(expr)
+    @special("dispatch-tag-macro", [STR, EXPR])
+    def compile_dispatch_tag_macro(self, expr, root, tag, arg):
+        return self.compile(tag_macroexpand(
+            HyString(mangle(tag)).replace(tag),
+            arg,
+            self))
 
     @builds("eval-and-compile", "eval-when-compile")
     def compile_eval_and_compile(self, expression, building):
