@@ -1640,14 +1640,12 @@ class HyASTCompiler(object):
                 defaults.append(ret.force_expr)
         return names, defaults, ret
 
-    @builds("return")
-    @checkargs(max=1)
-    def compile_return(self, expr):
+    @special("return", [maybe(EXPR)])
+    def compile_return(self, expr, root, arg):
         ret = Result()
-        if len(expr) == 1:
+        if arg is None:
             return asty.Return(expr, value=None)
-
-        ret += self.compile(expr[1])
+        ret += self.compile(arg)
         return ret + asty.Return(expr, value=ret.force_expr)
 
     @special("defclass", [
