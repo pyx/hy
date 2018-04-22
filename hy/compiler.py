@@ -336,44 +336,6 @@ def _nargs(n):
     return "%d argument%s" % (n, ("" if n == 1 else "s"))
 
 
-def checkargs(exact=None, min=None, max=None, even=None, multiple=None):
-    def _dec(fn):
-        def checker(self, expression):
-            if exact is not None and (len(expression) - 1) != exact:
-                _raise_wrong_args_number(
-                    expression, "`%%s' needs %s, got %%d" % _nargs(exact))
-            if min is not None and (len(expression) - 1) < min:
-                _raise_wrong_args_number(
-                    expression,
-                    "`%%s' needs at least %s, got %%d." % _nargs(min))
-
-            if max is not None and (len(expression) - 1) > max:
-                _raise_wrong_args_number(
-                    expression,
-                    "`%%s' needs at most %s, got %%d" % _nargs(max))
-
-            is_even = not((len(expression) - 1) % 2)
-            if even is not None and is_even != even:
-                even_str = "even" if even else "odd"
-                _raise_wrong_args_number(
-                    expression,
-                    "`%%s' needs an %s number of arguments, got %%d"
-                    % (even_str))
-
-            if multiple is not None:
-                if not (len(expression) - 1) in multiple:
-                    choices = ", ".join([str(val) for val in multiple[:-1]])
-                    choices += " or %s" % multiple[-1]
-                    _raise_wrong_args_number(
-                        expression,
-                        "`%%s' needs %s arguments, got %%d" % choices)
-
-            return fn(self, expression)
-
-        return checker
-    return _dec
-
-
 def is_unpack(kind, x):
     return (isinstance(x, HyExpression)
             and len(x) > 0
@@ -1635,12 +1597,6 @@ class HyASTCompiler(object):
                 if ast_str(root) == "eval_and_compile"
                 else Result())
 
-    @checkargs(1)
-    def _compile_keyword_call(self, expression):
-        expression.append(expression.pop(0))
-        expression.insert(0, HySymbol("get"))
-        return self.compile(expression)
-
     @builds(HyExpression)
     def compile_expression(self, expression):
         # Perform macro expansions
@@ -1655,7 +1611,12 @@ class HyASTCompiler(object):
         fn = expression[0]
         func = None
         if isinstance(fn, HyKeyword):
-            return self._compile_keyword_call(expression)
+            if len(expression) > 2:
+                raise HyTypeError(
+                    expression, "keyword calls take only 1 argument")
+            expression.append(expression.pop(0))
+            expression.insert(0, HySymbol("get"))
+            return self.compile(expression)
 
         if isinstance(fn, HySymbol):
             # First check if `fn` is a special form, unless it has an
