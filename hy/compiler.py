@@ -1710,14 +1710,14 @@ class HyASTCompiler(object):
             arg,
             self))
 
-    @builds("eval-and-compile", "eval-when-compile")
-    def compile_eval_and_compile(self, expression, building):
-        expression[0] = HySymbol("do")
-        hy.importer.hy_eval(expression,
+    @special(["eval-and-compile", "eval-when-compile"], [many(EXPR)])
+    def compile_eval_and_compile(self, expr, root, body):
+        new_expr = HyExpression([HySymbol("do").replace(root)]).replace(expr)
+        hy.importer.hy_eval(new_expr + body,
                             compile_time_ns(self.module_name),
                             self.module_name)
-        return (self._compile_branch(expression[1:])
-                if building == "eval_and_compile"
+        return (self._compile_branch(body)
+                if ast_str(root) == "eval_and_compile"
                 else Result())
 
     @builds(HyInteger, HyFloat, HyComplex)
