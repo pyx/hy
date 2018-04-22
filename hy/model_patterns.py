@@ -3,9 +3,12 @@
 # license. See the LICENSE.
 
 from hy.models import HyExpression, HySymbol, HyKeyword, HyString, HyList
-from funcparserlib.parser import some, skip, many, finished, a
+from funcparserlib.parser import (some, skip, many, maybe, finished,
+                                  a, pure, Parser, NoParseError, State)
 from functools import reduce
+from itertools import repeat
 from operator import add
+from math import isinf
 
 EXPR = some(lambda _: True)
 SYM = some(lambda x: isinstance(x, HySymbol))
@@ -42,3 +45,20 @@ def notform(*disallowed_heads):
         x and
         isinstance(x[0], HySymbol) and
         x[0] in disallowed_heads))
+
+def times(lo, hi, parser):
+    @Parser
+    def f(tokens, s):
+        result = []
+        for _ in range(lo):
+            (v, s) = parser.run(tokens, s)
+            result.append(v)
+        end = s.max
+        try:
+            for _ in (repeat(1) if isinf(hi) else range(hi - lo)):
+                (v, s) = parser.run(tokens, s)
+                result.append(v)
+        except NoParseError as e:
+            end = e.state.max
+        return result, State(s.pos, end)
+    return f
