@@ -1333,33 +1333,15 @@ class HyASTCompiler(object):
 
         return ret
 
-    @builds("+=", "/=", "//=", "*=", "-=", "%=", "**=", "<<=", ">>=", "|=",
-            "^=", "&=")
-    @builds("@=", iff=PY35)
-    @checkargs(2)
-    def compile_augassign_expression(self, expression):
-        ops = {"+=": ast.Add,
-               "/=": ast.Div,
-               "//=": ast.FloorDiv,
-               "*=": ast.Mult,
-               "-=": ast.Sub,
-               "%=": ast.Mod,
-               "**=": ast.Pow,
-               "<<=": ast.LShift,
-               ">>=": ast.RShift,
-               "|=": ast.BitOr,
-               "^=": ast.BitXor,
-               "&=": ast.BitAnd}
-        if PY35:
-            ops.update({"@=": ast.MatMult})
+    a_ops = {x + "=": v for x, v in m_ops.items()}
 
-        op = ops[expression[0]]
-
-        target = self._storeize(expression[1], self.compile(expression[1]))
-        ret = self.compile(expression[2])
-
+    @special(list(a_ops.keys()), [EXPR, EXPR])
+    def compile_augassign_expression(self, expr, root, target, value):
+        op = self.a_ops[unmangle(ast_str(root))]
+        target = self._storeize(target, self.compile(target))
+        ret = self.compile(value)
         return ret + asty.AugAssign(
-            expression, target=target, value=ret.force_expr, op=op())
+            expr, target=target, value=ret.force_expr, op=op())
 
     @checkargs(1)
     def _compile_keyword_call(self, expression):
