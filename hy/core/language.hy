@@ -70,7 +70,6 @@ If the second argument `codegen` is true, generate python code instead."
   (import astor)
   (import hy.compiler)
 
-  (spoof-positions tree)
   (setv compiled (hy.compiler.hy-compile tree (calling-module-name)))
   ((if codegen
        astor.code-gen.to-source
