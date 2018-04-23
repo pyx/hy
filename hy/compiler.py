@@ -1300,7 +1300,7 @@ class HyASTCompiler(object):
                               "Can't assign to a callable: `%s'" % str_name)
 
         if (result.temp_variables
-                and isinstance(name, HyString)
+                and isinstance(name, HySymbol)
                 and '.' not in name):
             result.rename(name)
             # Throw away .expr to ensure that (setv ...) returns None.
